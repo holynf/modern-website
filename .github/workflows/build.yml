@@ -2,7 +2,13 @@ name: Build and Deploy React App to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    # Trigger on pushes to the main repository branch(s)
+    branches: [ "master", "main" ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 #permissions:
 #  contents: write   # Needed to push to gh-pages
@@ -24,15 +30,16 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
         run: npm run build
 
       - name: Upload build folder
+        # Vite outputs to `dist/` by default
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/
+          path: dist/
 
   deploy:
     needs: build

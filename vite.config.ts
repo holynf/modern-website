@@ -5,5 +5,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
+  // When deploying to GitHub Pages under a repository (not user/organization root),
+  // set `base` to the repository name so built asset paths are correct.
+  base: '/modern-website/',
+  plugins: [react(), tailwindcss()],
 })
