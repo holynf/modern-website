@@ -13,9 +13,7 @@ jobs:
     container:
       image: node:20
     steps:
-      - uses: actions/checkout@v3
-        with:
-          node-version: "20"
+      - uses: actions/checkout@v4
           
       - run: npm ci
       - run: npm run build
@@ -25,7 +23,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh
 
-      - name: Deplot using SCP
+      - name: Deploy using SCP
         run: scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/node-app
       - name: Restart Remote Server
         run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ~/node-app && npm install && pm2 restart 0"
