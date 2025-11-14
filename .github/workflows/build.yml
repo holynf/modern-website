@@ -3,52 +3,29 @@ name: Build and Deploy React App to GitHub Pages
 on:
   push:
     # Trigger on pushes to the main repository branch(s)
-    branches: [ "master", "main" ]
+    branches: 
+      - master
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-#permissions:
-#  contents: write   # Needed to push to gh-pages
-#  pages: write      # Required for GitHub Pages
-#  id-token: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
-      - name: Upload build folder
-        # Vite outputs to `dist/` by default
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
+    container:
+      image: node:20
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v3
+        with:
+          node-version: "20"
+          
+      - run: npm ci
+      - run: npm run build
+
+      - name: Get Ssh key and set permissions
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh
+
+      - name: Deplot using SCP
+        run: scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/node-app
+      - name: Restart Remote Server
+        run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ~/node-app && npm install && pm2 restart 0"
